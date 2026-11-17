@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="깃허브 주소 입력표에서 제출 현황, 거주 지역, 취미를 살펴보는 인터랙티브 시각화">
+<title>깃허브 주소 입력표 · 제출과 자기소개</title>
+<style>
+:root{color-scheme:light;--paper:#e9ede4;--sheet:#f6f7f0;--ink:#192923;--muted:#506059;--line:#c8d0c3;--green:#285f52;--red:#aa4134;--serif:"Batang","Noto Serif KR",serif;--sans:"Malgun Gothic","Apple SD Gothic Neo",sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.6 var(--sans)}button,input{font:inherit}button{cursor:pointer;color:inherit}a{color:var(--green);text-underline-offset:4px}button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(--green);outline-offset:4px}
+.page{max-width:1380px;margin:auto;padding:30px clamp(18px,4vw,66px) 25px}.mast{display:flex;justify-content:space-between;align-items:center;gap:16px;padding-bottom:19px;border-bottom:1px solid var(--line);flex-wrap:wrap}.kicker{margin:0;color:var(--green);font-size:12px;font-weight:700;letter-spacing:.12em}.import{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.file-label{position:relative;display:inline-flex;cursor:pointer;border:1px solid var(--green);padding:6px 12px;color:var(--green);background:var(--sheet);font-size:13px;font-weight:700}.file-label input{position:absolute;inset:0;width:100%;opacity:0;cursor:pointer}.file-label:focus-within{outline:2px solid var(--green);outline-offset:3px}
+.hero{padding:36px 0 28px}h1,h2,h3,p{margin-top:0}h1{font:700 clamp(36px,6.4vw,82px)/1.12 var(--serif);letter-spacing:-.075em;margin:0 0 19px}.hero p{color:var(--muted);max-width:610px;margin-bottom:0;word-break:keep-all}.summary{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--line);background:var(--sheet);margin-bottom:25px}.metric{padding:12px clamp(8px,2.3vw,26px);min-width:0}.metric+.metric{border-left:1px solid var(--line)}.metric strong{font:700 clamp(27px,4.2vw,46px)/1.1 var(--serif);color:var(--green);display:block}.metric span{font-size:clamp(11px,1.4vw,14px);color:var(--muted)}
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin-bottom:20px}.tabs button{background:transparent;border:0;border-bottom:3px solid transparent;padding:9px clamp(10px,2.1vw,24px);font-weight:700}.tabs button[aria-selected=true]{border-bottom-color:var(--red);color:var(--red)}.layout{display:grid;grid-template-columns:minmax(0,1.95fr) minmax(0,1fr);gap:16px;align-items:start}.panel{background:var(--sheet);border:1px solid var(--line);padding:clamp(15px,2.4vw,28px);min-width:0}h2{font:700 25px/1.2 var(--serif);letter-spacing:-.06em;margin:7px 0 8px}.note,.status{color:var(--muted);font-size:13px;margin:0 0 13px}.status{margin:8px 0 0}.status:empty{display:none}
+.chart{display:grid;gap:8px;margin-top:21px}.bar{width:100%;display:grid;grid-template-columns:minmax(88px,1fr) minmax(40px,2.35fr) 3ch;gap:9px;align-items:center;text-align:left;border:1px solid transparent;background:transparent;padding:6px 7px}.bar:hover{background:#e9eee4}.bar[aria-pressed=true]{border-color:var(--red);background:#f3ebe3}.track{height:9px;background:#dfe5da}.fill{display:block;height:100%;background:var(--green)}.bar[aria-pressed=true] .fill{background:var(--red)}.count{text-align:right;font-variant-numeric:tabular-nums;font-size:13px}.bar-label{overflow-wrap:anywhere}
+.roster{margin-top:16px}.roster-head{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap;margin-bottom:13px}.search{background:white;border:1px solid var(--line);padding:6px 10px;max-width:100%;width:220px}.list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,165px),1fr));gap:7px}.person{text-align:left;background:var(--paper);border:1px solid var(--line);padding:7px 10px}.person[aria-pressed=true]{border-color:var(--red);color:var(--red)}dl{display:grid;grid-template-columns:minmax(75px,auto) minmax(0,1fr);gap:8px 10px;margin:15px 0 0;font-size:13px}dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere}.group-number{font:700 50px/1.1 var(--serif);color:var(--red);margin:18px 0 8px}.footer{padding-top:16px;margin-top:26px;border-top:1px solid var(--line);color:var(--muted);font-size:12px;display:flex;gap:15px;justify-content:space-between;flex-wrap:wrap}
+@media(max-width:720px){.layout{grid-template-columns:1fr}.hero{padding:27px 0 22px}.bar{grid-template-columns:minmax(79px,1fr) minmax(36px,1.5fr) 3ch}.page{padding-top:18px}.roster-head{align-items:start}}
+</style>
+</head>
+<body>
+<main class="page">
+  <header class="mast"><p class="kicker">깃허브 주소 입력표</p><div class="import"><label class="file-label">CSV 열기<input id="file" type="file" accept=".csv,text/csv" aria-label="CSV 열기"></label></div></header>
+  <p class="status" id="fileStatus" role="status"></p>
+  <section class="hero"><h1>제출과 자기소개</h1><p>GitHub와 제출 페이지 주소의 기입 현황, 거주 지역과 취미를 살펴보세요. 차트에서 항목을 선택하면 상세 정보가 바뀝니다.</p></section>
+  <section class="summary" id="summary" aria-label="입력 현황"></section>
+  <div class="tabs" role="tablist" aria-label="시각화 항목">
+    <button type="button" id="tab-links" role="tab" aria-controls="viz" data-tab="links">제출 현황</button>
+    <button type="button" id="tab-region" role="tab" aria-controls="viz" data-tab="region">거주 지역</button>
+    <button type="button" id="tab-hobby" role="tab" aria-controls="viz" data-tab="hobby">취미</button>
+  </div>
+  <section class="layout" id="viz" role="tabpanel" tabindex="0">
+    <section class="panel"><p class="kicker">분포</p><h2 id="chartTitle"></h2><p class="note" id="chartNote"></p><div class="chart" id="chart"></div></section>
+    <aside class="panel" aria-label="선택한 항목 상세" aria-live="polite"><p class="kicker" id="detailLabel"></p><div id="detail"></div></aside>
+  </section>
+  <section class="panel roster" id="rosterPanel" hidden><div class="roster-head"><div><p class="kicker">명단</p><h2 id="rosterTitle"></h2><p id="rosterNote" class="note"></p></div><input class="search" type="search" id="search" aria-label="이름 검색" placeholder="이름 검색"></div><div class="list" id="roster"></div></section>
+  <footer class="footer"><span>데이터 · 깃허브 주소 입력표 - Untitled.csv</span><a href="https://gypog5122-cell.github.io/20260911-2/" target="_blank" rel="noopener noreferrer">디자인 참고 · JS 스튜디오 인물지도 ↗</a></footer>
+</main>
+<script id="dataset" type="application/json">{"summary":{"total":15,"github":15,"pages":14,"groups":{"links":[["둘 다 입력",14],["GitHub만 입력",1],["제출 페이지만 입력",0],["둘 다 미입력",0]],"region":[["경기",9],["서울",4],["강원",1],["경남",1]],"hobby":[["게임",2],["애니",2],["운동",2],["공포 보기",1],["그림",1],["기깔나게 자기",1],["기타",1],["네줄기타",1],["노래듣기",1],["독서",1],["뜨개질",1],["영화 시청",1],["영화감상",1],["우쿨렐레",1],["위시 사랑하기",1],["음악",1],["음악 감상",1],["음악 감상 및 연주(통기타&일렉)",1],["음악듣기",1],["일렉기타",1],["콘서트 관람",1],["쿠리만쥬 인형 구매",1],["피파",1]]}}}</script>
+<script>const fields = ['이름','GitHub 주소 (본인 줄에 입력)','제출 페이지 주소 (GitHub Pages)','인스타그램','취미','집주소 동까지만','세상에서 가장아끼는거하나','성별'];
+const linkGroups = ['둘 다 입력','GitHub만 입력','제출 페이지만 입력','둘 다 미입력'];
+const missing = '미입력';
+
+function csvRows(text) {
+  const rows = [];
+  let row = [], value = '', quoted = false;
+  for (let index = 0; index < text.length; index++) {
+    const character = text[index];
+    if (quoted) {
+      if (character !== '"') value += character;
+      else if (text[index + 1] === '"') {
+        value += '"';
+        index++;
+      } else quoted = false;
+    } else if (character === '"' && !value) quoted = true;
+    else if (character === ',') {
+      row.push(value.trim());
+      value = '';
+    } else if (character === '\n') {
+      rows.push([...row, value.trim()]);
+      row = [];
+      value = '';
+    } else value += character;
+  }
+  if (quoted) throw new Error('CSV의 닫는 따옴표를 확인해 주세요.');
+  if (row.length || value) rows.push([...row, value.trim()]);
+  return rows;
+}
+
+function region(address) {
+  if (!address) return missing;
+  const first = address.split(/\s+/)[0];
+  if (first.startsWith('서울') || first === '동대문구') return '서울';
+  if (first.startsWith('경기')) return '경기';
+  if (first.startsWith('강원')) return '강원';
+  if (first === '거제시') return '경남';
+  return '기타 지역';
+}
+
+function parse(text) {
+  const rows = csvRows(text.replace(/^\uFEFF/, ''));
+  const headerIndex = rows.findIndex(row => fields.every(field => row.includes(field)));
+  if (headerIndex < 0) throw new Error('깃허브 주소 입력표의 머리글을 찾을 수 없습니다.');
+  const indexes = fields.map(field => rows[headerIndex].indexOf(field));
+  const profiles = rows.slice(headerIndex + 1)
+    .filter(row => row[indexes[0]])
+    .map(row => indexes.map(index => row[index] || ''));
+  if (!profiles.length) throw new Error('이름이 입력된 행이 없습니다.');
+  return profiles;
+}
+
+const groupsFor = {
+  links(profile) {
+    const [, github, page] = profile;
+    return [linkGroups[github ? (page ? 0 : 1) : (page ? 2 : 3)]];
+  },
+  region: profile => [region(profile[5])],
+  hobby(profile) {
+    const values = new Set(profile[4].split(',').map(value => value.trim()).filter(Boolean));
+    return values.size ? [...values] : [missing];
+  }
+};
+
+function summarize(profiles) {
+  const groups = Object.fromEntries(Object.entries(groupsFor).map(([key, getGroups]) => {
+    const counts = new Map(key === 'links' ? linkGroups.map(label => [label, 0]) : []);
+    for (const profile of profiles) {
+      for (const label of getGroups(profile)) counts.set(label, (counts.get(label) || 0) + 1);
+    }
+    const distribution = [...counts];
+    if (key !== 'links') distribution.sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ko'));
+    return [key, distribution];
+  }));
+  return {
+    total: profiles.length,
+    github: profiles.filter(profile => profile[1]).length,
+    pages: profiles.filter(profile => profile[2]).length,
+    groups
+  };
+}
+</script>
+<script>const get = id => document.getElementById(id);
+const dataset = JSON.parse(get('dataset').textContent);
+let profiles = dataset.profiles || [];
+let summary = dataset.summary;
+let activeTab = 'links';
+let selectedGroup = null;
+let selectedPerson = null;
+const tabs = [...document.querySelectorAll('[role="tab"]')];
+const settings = {
+  links: ['주소 기입 현황', '이름이 있는 행에서 두 주소 칸의 기입 여부를 셌습니다. 링크 접속 여부는 집계에 포함되지 않습니다.'],
+  region: ['시·도별 인원', '거주지 원문을 시·도 단위로 묶었습니다. 동대문구는 서울, 거제시는 경남에 포함했습니다.'],
+  hobby: ['취미별 응답 인원', '쉼표로 나누고 같은 사람의 중복 항목을 한 번만 셌습니다. 원문 표기를 유지해 비슷한 표현도 각각 표시됩니다.']
+};
+
+function element(tag, value = '', options = {}) {
+  const node = document.createElement(tag);
+  node.textContent = value;
+  for (const [key, val] of Object.entries(options)) node.setAttribute(key, val);
+  return node;
+}
+
+function renderSummary() {
+  const metrics = [['전체 인원', summary.total], ['GitHub 주소 입력', summary.github], ['제출 페이지 주소 입력', summary.pages]];
+  get('summary').replaceChildren(...metrics.map(([label, value]) => {
+    const box = element('div', '', {class:'metric'});
+    box.append(element('strong', value), element('span', label));
+    return box;
+  }));
+}
+
+function safeLink(value, index) {
+  if (index < 1 || index > 3 || !value) return null;
+  const first = value.split(/\s+/)[0];
+  const address = index === 3 && !first.includes('/') ? 'https://www.instagram.com/' + first.replace(/^@/, '') + '/' : first;
+  try {
+    const url = new URL(address.startsWith('https://') || address.startsWith('http://') ? address : 'https://' + address);
+    const allowed = index === 1 ? url.hostname === 'github.com'
+      : index === 2 ? url.hostname.endsWith('.github.io')
+      : ['www.instagram.com', 'instagram.com'].includes(url.hostname);
+    if (allowed && !url.username && !url.password) return url.href;
+  } catch {}
+  return null;
+}
+
+function renderDetail() {
+  const detail = get('detail');
+  detail.replaceChildren();
+  if (selectedPerson !== null) {
+    const profile = profiles[selectedPerson];
+    get('detailLabel').textContent = '프로필';
+    const list = element('dl');
+    const labels = ['GitHub','제출 페이지','인스타그램','취미','거주지','가장 아끼는 것','성별 (원문)'];
+    labels.forEach((label, offset) => {
+      const index = offset + 1;
+      const value = profile[index];
+      const address = safeLink(value, index);
+      const definition = element('dd', address ? '' : (value || missing));
+      if (address) definition.append(element('a', value, {href:address,target:'_blank',rel:'noopener noreferrer'}));
+      list.append(element('dt', label), definition);
+    });
+    detail.append(element('h2', profile[0]), list);
+    return;
+  }
+  get('detailLabel').textContent = '선택한 항목';
+  const [label, count] = selectedGroup === null ? ['전체', summary.total]
+    : summary.groups[activeTab].find(entry => entry[0] === selectedGroup);
+  const percentage = new Intl.NumberFormat('ko-KR',{style:'percent',maximumFractionDigits:1}).format(count / summary.total);
+  detail.append(element('h2', label), element('p', count + '명', {class:'group-number'}),
+    element('p', '전체 ' + summary.total + '명 중 ' + percentage, {class:'note'}));
+  if (!profiles.length) detail.append(element('p', '원본 CSV를 열면 브라우저에서 명단과 개인별 상세를 볼 수 있습니다.', {class:'note'}));
+}
+
+function renderRoster() {
+  get('rosterPanel').hidden = !profiles.length;
+  if (!profiles.length) return;
+  const search = get('search').value.trim().toLocaleLowerCase('ko');
+  const matches = profiles.map((profile, index) => ({profile,index})).filter(({profile}) =>
+    (selectedGroup === null || groupsFor[activeTab](profile).includes(selectedGroup)) &&
+    profile[0].toLocaleLowerCase('ko').includes(search));
+  if (!matches.some(({index}) => index === selectedPerson)) selectedPerson = null;
+  get('rosterTitle').textContent = selectedGroup || '전체 명단';
+  get('rosterNote').textContent = matches.length + '명 · 이름을 누르면 상세 프로필이 열립니다.';
+  const list = get('roster');
+  list.replaceChildren();
+  if (!matches.length) list.append(element('p','조건에 맞는 이름이 없습니다.',{class:'note'}));
+  for (const {profile,index} of matches) {
+    const button = element('button',profile[0],{type:'button',class:'person','aria-pressed':String(index === selectedPerson)});
+    button.addEventListener('click', () => {
+      selectedPerson = selectedPerson === index ? null : index;
+      for (const person of list.children) person.setAttribute('aria-pressed', 'false');
+      button.setAttribute('aria-pressed', String(selectedPerson === index));
+      renderDetail();
+      if (selectedPerson !== null && window.matchMedia('(max-width:720px)').matches) {
+        get('detailLabel').scrollIntoView({block:'nearest'});
+      }
+    });
+    list.append(button);
+  }
+}
+
+function renderChart() {
+  for (const tab of tabs) {
+    const selected = activeTab === tab.dataset.tab;
+    tab.setAttribute('aria-selected', String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+  }
+  get('viz').setAttribute('aria-labelledby', 'tab-' + activeTab);
+  const [title,note] = settings[activeTab];
+  get('chartTitle').textContent = title;
+  get('chartNote').textContent = note;
+  const chart = get('chart');
+  chart.replaceChildren();
+  for (const [label,count] of summary.groups[activeTab]) {
+    const bar = element('button','',{type:'button',class:'bar','aria-pressed':String(selectedGroup === label),'aria-label':label + ' ' + count + '명'});
+    const track = element('span','',{class:'track','aria-hidden':'true'});
+    const fill = element('span','',{class:'fill'});
+    fill.style.width = (100 * count / summary.total) + '%';
+    track.append(fill);
+    bar.append(element('span',label,{class:'bar-label'}),track,element('span',count,{class:'count'}));
+    bar.addEventListener('click', () => {
+      selectedGroup = selectedGroup === label ? null : label;
+      selectedPerson = null;
+      for (const button of chart.children) button.setAttribute('aria-pressed','false');
+      bar.setAttribute('aria-pressed',String(selectedGroup === label));
+      renderRoster();
+      renderDetail();
+    });
+    chart.append(bar);
+  }
+  renderRoster();
+  renderDetail();
+}
+
+for (const [index,tab] of tabs.entries()) {
+  tab.addEventListener('click', () => {
+    activeTab = tab.dataset.tab;
+    selectedGroup = null;
+    selectedPerson = null;
+    renderChart();
+  });
+  tab.addEventListener('keydown', event => {
+    const target = {ArrowRight:(index + 1) % tabs.length,ArrowLeft:(index + tabs.length - 1) % tabs.length,Home:0,End:tabs.length - 1}[event.key];
+    if (target === undefined) return;
+    event.preventDefault();
+    tabs[target].focus();
+    tabs[target].click();
+  });
+}
+
+get('search').addEventListener('input', () => {renderRoster(); renderDetail();});
+get('file').addEventListener('change', async event => {
+  const input = event.target;
+  const file = input.files[0];
+  if (!file) return;
+  try {
+    profiles = parse(await file.text());
+    summary = summarize(profiles);
+    selectedGroup = null;
+    selectedPerson = null;
+    get('search').value = '';
+    renderSummary();
+    renderChart();
+    get('fileStatus').textContent = '브라우저에서 열었습니다 · ' + file.name;
+  } catch (error) {
+    get('fileStatus').textContent = error.message;
+  } finally {
+    input.value = '';
+  }
+});
+renderSummary();
+renderChart();
+</script>
+</body>
+</html>
